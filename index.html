@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/datastreams-api"></script>
+</head>
+<body>
+    
+</body>
+<script type="module">
+
+// Section One: Signals -------------------------
+// ------------ Generate Sine Wave ------------
+const animate = (callback) => {
+    const t = Date.now() / 1000 
+    const y = Math.sin( t )
+    callback(y)
+    setTimeout(() => animate(callback), 1000/60)
+}
+
+// animate((y) => console.log(y))
+
+// ------------ Initialize Data Device ------------
+import * as datastreams from 'https://cdn.jsdelivr.net/npm/datastreams-api/dist/index.esm.js'
+
+const dataDevices = new datastreams.DataDevices()
+
+// ------------ Create a Device ------------
+let looping = false
+let freqs = [1,4,8]
+const customDevice = {
+    label: 'mydevice',
+    onconnect: (device) => {
+        looping = true
+        const animate = (callback) => {
+            if (looping){
+                const t = Date.now() / 1000 
+                let channels = []
+                freqs.forEach(f => {
+                    const y = Math.sin((2 * f * Math.PI) * t)
+                    channels.push(y)
+                })
+                callback(channels)
+                setTimeout(() => animate(callback), 1000/60)
+            }
+        }
+
+        animate(device.ondata)
+        
+    },
+    ondisconnect: async (device) => looping = false,
+    ondata: (channels) => {
+        
+        // This would usually have to be organized.
+        // But we already have what we need!
+        return channels
+
+    },
+    protocols: []
+}
+
+dataDevices.load(customDevice) // Load your device into the API
+
+// ------------ Connect the Custom Device ------------
+const button = document.createElement('button')
+document.body.appendChild(button)
+button.innerHTML = 'Start Synthetic Data'
+
+const startDataAcquisition = (constraints) => {
+    dataDevices.getUserDevice(constraints).then(device => {
+        console.log('Device connected!')
+
+        device.stream.getTracks().forEach(track => {
+            track.subscribe((data, timestamp) => {
+                console.log(`[${track.contentHint}]: ${data} - ${timestamp}`)
+            })
+        })
+    })
+}
+
+button.onclick = () => startDataAcquisition({label: 'mydevice'})
+
+// Section Two: Physiological Sensing -------------------------
+// ------------ Load and Connect an EEG Device ------------
+import ganglion from "https://cdn.jsdelivr.net/npm/@brainsatplay/ganglion@0.0.2/dist/index.esm.js"
+dataDevices.load(ganglion) // Load your EEG device into the API
+
+const button2 = document.createElement('button')
+document.body.appendChild(button2)
+button2.innerHTML = 'Connect Ganglion'
+button2.onclick = () => startDataAcquisition({label: 'ganglion'})
+
+
+</script>
+</html>
