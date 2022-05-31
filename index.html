@@ -72,12 +72,14 @@ button.innerHTML = 'Start Synthetic Data'
 const startDataAcquisition = (constraints) => {
     dataDevices.getUserDevice(constraints).then(device => {
         console.log('Device connected!')
-
-        device.stream.getTracks().forEach(track => {
+        const ontrack = (track) => {
             track.subscribe((data, timestamp) => {
                 console.log(`[${track.contentHint}]: ${data} - ${timestamp}`)
             })
-        })
+        }
+        
+        device.stream.getTracks().forEach(ontrack)
+        device.stream.ontrack = ontrack
     })
 }
 
