@@ -4,9 +4,11 @@ import ui from "./plugins/ui/index.js"
 // Devices
 import synthetic from "../../devices/synthetic/index.js"
 import ganglion from "../../devices/ganglion/index.js"
-const pkg = (await import('./package.json', {assert: {type: 'json'}})).default
-const plugins = (await import('./.brainsatplay/index.plugins.json', {assert: {type: 'json'}})).default
-const graph = (await import('./.brainsatplay/index.graph.json', {assert: {type: 'json'}})).default
+
+
+import pkg from './package.json' assert {type: 'json'};
+import graph from './.brainsatplay/index.graph.json' assert {type: 'json'};
+import plugins from './.brainsatplay/index.plugins.json' assert {type: 'json'};
 
 export default {
     datastreams, 
