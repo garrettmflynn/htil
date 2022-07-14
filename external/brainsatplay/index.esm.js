@@ -7,13 +7,21 @@ var __export = (target, all) => {
 // ../../external/graphscript/Graph.ts
 function getFnParamInfo(fn) {
   var fstr = fn.toString();
-  const matches = fstr.match(/\(.*?\)/)[0].replace(/[()]/gi, "").split(",");
+  // console.log('fstr', fstr)
+  const match = fstr.match(/(async )?[^async ]\(?(.*?)\)?(=>|{)/)
+  // console.log('match', match)
+  const innerMatch = match[2]
+  // console.log('innerMatch', fstr, innerMatch)
+  const matches = innerMatch.split(",");
   const info = /* @__PURE__ */ new Map();
+  // console.log(matches)
+
   matches.forEach((v) => {
     const arr = v.split("=");
     if (arr[0])
       info.set(arr[0], (0, eval)(arr[1]));
   });
+
   return info;
 }
 function parseFunctionFromText(method = "") {

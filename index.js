@@ -3,6 +3,7 @@
     import * as editorComponents from './external/editor/index.esm.js'
 
     import appInfo from './content/signals/index.js'
+
     const app = new brainsatplay.App(appInfo)
     // const app = new brainsatplay.editable.App(appInfo)
     const editor = new editorComponents.Editor()
@@ -20,8 +21,11 @@
     if (activeApp.active) activeApp = activeApp.active
     app.onstart = editor.start
 
-    const ok = await app.start(appInfo).catch(e => console.error('Invalid App', e))
-    if (ok) editor.setGraph(activeApp.graph)
+    app.start(appInfo).then(ok => {
+
+        if (ok) editor.setGraph(activeApp.graph)
+        
+    }).catch(e => console.error('Invalid App', e))
 
 
     document.getElementById('editor').appendChild(editor)
