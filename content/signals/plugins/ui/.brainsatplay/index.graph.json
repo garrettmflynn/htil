@@ -1,0 +1,22 @@
+{
+    "nodes": [
+        {
+            "tag": "button"
+        },
+        {
+            "tag": "data"
+        }
+    ],
+
+    "edges": [
+
+    ],
+
+    "ports": { 
+        "input": {
+            "button": "button",
+            "data": "data"
+        },
+        "output": "button.onclick"
+    }
+}

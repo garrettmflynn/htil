@@ -1,0 +1,22 @@
+{
+    "nodes": [
+        {
+            "tag": "load"
+        },
+        {
+            "tag": "start"
+        }
+    ],
+
+    "edges": [
+
+    ],
+
+    "ports": { 
+        "input": {
+            "button": "load",
+            "data": "start"
+        },
+        "output": "start"
+    }
+}

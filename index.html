@@ -4,97 +4,68 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-    <script src="https://cdn.jsdelivr.net/npm/datastreams-api"></script>
+    <title>HTIL Educational Website</title>
+    <link rel=stylesheet href="./style.css">
 </head>
 <body>
-    
+    <section>
+        <h1>Signals</h1>
+        <p>This is a module on signals.</p>
+        <div id="editor"></div>
+    </section>
 </body>
 <script type="module">
 
-// Section One: Signals -------------------------
-// ------------ Generate Sine Wave ------------
-const animate = (callback) => {
-    const t = Date.now() / 1000 
-    const y = Math.sin( t )
-    callback(y)
-    setTimeout(() => animate(callback), 1000/60)
-}
+    import * as brainsatplay from './external/brainsatplay/index.esm.js'
+    import * as editorComponents from './external/editor/index.esm.js'
 
-// animate((y) => console.log(y))
+    import appInfo from './content/signals/index.js'
+    const app = new brainsatplay.App(appInfo)
+    // const app = new brainsatplay.editable.App(appInfo)
+    const editor = new editorComponents.Editor()
+    editor.setApp(app)
 
-// ------------ Initialize Data Device ------------
-import * as datastreams from 'https://cdn.jsdelivr.net/npm/datastreams-api/dist/index.esm.js'
 
-const dataDevices = new datastreams.DataDevices()
+    const ui = document.createElement('div')
+    const button = document.createElement('button')
+    button.innerHTML = 'Click me'
+    ui.appendChild(button)
 
-// ------------ Create a Device ------------
-let looping = false
-let freqs = [1,4,8]
-const customDevice = {
-    label: 'mydevice',
-    onconnect: (device) => {
-        looping = true
-        const animate = (callback) => {
-            if (looping){
-                const t = Date.now() / 1000 
-                let channels = []
-                freqs.forEach(f => {
-                    const y = Math.sin((2 * f * Math.PI) * t)
-                    channels.push(y)
-                })
-                callback(channels)
-                setTimeout(() => animate(callback), 1000/60)
-            }
+    editor.setUI(ui)
+
+    let activeApp = app
+    if (activeApp.active) activeApp = activeApp.active
+
+    app.onstart = () => {
+
+        editor.start()
+
+        let sub = null
+        let node = null
+
+        activeApp.graph.nodes.forEach(n => {
+            // if (!node && n.tag.includes('sine')) {
+            //     node = n
+            //     sub = n.subscribe((data) => {
+            //         ui.data = [data]
+            //         ui.draw()
+            //     })
+            //     return true
+            // }
+        })
+
+        app.onstop = () => {
+            if (node) node.unsubscribe(sub)
         }
+    }
 
-        animate(device.ondata)
-        
-    },
-    ondisconnect: async (device) => looping = false,
-    ondata: (channels) => {
-        
-        // This would usually have to be organized.
-        // But we already have what we need!
-        return channels
+    const ok = await app.start(appInfo).catch(e => console.error('Invalid App', e))
+    if (ok) editor.setGraph(activeApp.graph)
 
-    },
-    protocols: []
-}
 
-dataDevices.load(customDevice) // Load your device into the API
+    document.getElementById('editor').appendChild(editor)
 
-// ------------ Connect the Custom Device ------------
-const button = document.createElement('button')
-document.body.appendChild(button)
-button.innerHTML = 'Start Synthetic Data'
-
-const startDataAcquisition = (constraints) => {
-    dataDevices.getUserDevice(constraints).then(device => {
-        console.log('Device connected!')
-        const ontrack = (track) => {
-            track.subscribe((data, timestamp) => {
-                console.log(`[${track.contentHint}]: ${data} - ${timestamp}`)
-            })
-        }
-        
-        device.stream.getTracks().forEach(ontrack)
-        device.stream.ontrack = ontrack
-    })
-}
-
-button.onclick = () => startDataAcquisition({label: 'mydevice'})
-
-// Section Two: Physiological Sensing -------------------------
-// ------------ Load and Connect an EEG Device ------------
-import ganglion from "https://cdn.jsdelivr.net/npm/@brainsatplay/ganglion@0.0.2/dist/index.esm.js"
-dataDevices.load(ganglion) // Load your EEG device into the API
-
-const button2 = document.createElement('button')
-document.body.appendChild(button2)
-button2.innerHTML = 'Connect Ganglion'
-button2.onclick = () => startDataAcquisition({label: 'ganglion'})
-
+    // app.save() // Global save.
 
 </script>
 </html>

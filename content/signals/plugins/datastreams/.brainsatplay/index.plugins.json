@@ -1,0 +1,4 @@
+{
+    "load": "plugins/load/index.js",
+    "start": "plugins/start/index.js"
+}

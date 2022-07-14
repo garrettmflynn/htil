@@ -1,0 +1,22 @@
+{
+
+    "nodes": [
+        {
+            "tag": "synthetic"
+        },
+        {
+            "tag": "datastreams"
+        },
+        {
+            "tag": "ui"
+        }
+    ],
+
+    "edges": [
+        ["synthetic", "datastreams.load"],
+        ["ui.button.onclick", "datastreams.start"],
+        ["datastreams.start", "ui.data"]
+    ],
+
+    "ports": { }
+}
