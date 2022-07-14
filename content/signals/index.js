@@ -7,8 +7,8 @@ import ganglion from "../../devices/ganglion/index.js"
 
 
 import pkg from './package.json' assert {type: 'json'};
-import graph from './.brainsatplay/index.graph.json' assert {type: 'json'};
-import plugins from './.brainsatplay/index.plugins.json' assert {type: 'json'};
+const plugins = (await import('./.brainsatplay/index.plugins.json', {assert: {type: 'json'}})).default
+const graph = (await import('./.brainsatplay/index.graph.json', {assert: {type: 'json'}})).default
 
 export default {
     datastreams, 
@@ -16,7 +16,7 @@ export default {
 
     synthetic,
     ganglion,
-    
+
     ['.brainsatplay']: {
         package: pkg,
         graph,
