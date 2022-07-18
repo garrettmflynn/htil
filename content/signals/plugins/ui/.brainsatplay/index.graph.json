@@ -1,22 +1,15 @@
 {
-    "nodes": [
-        {
-            "tag": "button"
+    "nodes": {
+        "button" : {
+            "innerHTML": "Start data acquisition"
         },
-        {
-            "tag": "data"
-        }
-    ],
-
-    "edges": [
-
-    ],
+        "data" : {}
+    },
 
     "ports": { 
         "input": {
-            "button": "button",
             "data": "data"
         },
-        "output": "button.onclick"
+        "output": "button"
     }
 }

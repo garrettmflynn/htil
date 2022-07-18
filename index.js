@@ -11,20 +11,31 @@
 
 
     const ui = document.createElement('div')
-    const button = document.createElement('button')
-    button.innerHTML = 'Click me'
-    ui.appendChild(button)
-
     editor.setUI(ui)
+
+    app.setParent(ui)
 
     let activeApp = app
     if (activeApp.active) activeApp = activeApp.active
     app.onstart = editor.start
+    
 
     app.start(appInfo).then(ok => {
 
+        console.log('App', app)
+
         if (ok) editor.setGraph(activeApp.graph)
-        
+
+        const domService = app.graph.nodes.get('ui').source
+        const buttonNode = domService.nodes.get('button')
+        let buttonElementNode = null
+        Object.keys(domService.elements).find(str => {
+            if (str.includes('button')){
+                buttonElementNode = domService.elements[str].node
+                return true
+            }
+        })
+
     }).catch(e => console.error('Invalid App', e))
 
 

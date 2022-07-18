@@ -1,9 +1,27 @@
+
+let self;
+let element;
+
+const paragraphs = {}
+
 export default {
-    operator: (input) => {
-        console.log('Div', input)
-        const div = document.createElement('div')
-        div.style.background = 'red'
-        div.style.width = div.style.height = '100px'
-        return div
+    operator: (id, data, time, test=100) => {
+        if (!paragraphs[id]) {
+            paragraphs[id] = document.createElement('p')
+            element.appendChild(paragraphs[id])
+        }
+        paragraphs[id].innerHTML = `<b>${id}:</b> ${data} - ${test}`
+    },
+
+    tagName: 'div',
+    style: {
+        width: '300px',
+        height: '100px',
+        padding: '25px'
+    },
+
+    oncreate: (el, props) => {
+        element = el
+        self = props.node
     }
 }

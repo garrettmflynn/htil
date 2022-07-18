@@ -1,8 +1,20 @@
+
 export default {
-    operator: (input) => {
-        let button = document.createElement('button')
-        button.innerText = 'Start data acquisition'
-        console.log('Adding button', input)
-        return button // Click to activate next node
+    operator: (pressed) => pressed, // Click to activate next node
+
+    // Element Specification
+    tagName: 'button',
+    innerHTML: 'Click Me',
+    oncreate: (self, props) => { 
+        self.onmousedown = () => {
+
+            props.node.run(true)
+
+            const onMouseUp = () => {
+                props.node.run(false)
+                globalThis.removeEventListener('mouseup', onMouseUp)
+            }
+            globalThis.addEventListener('mouseup', onMouseUp)
+        }
     }
 }

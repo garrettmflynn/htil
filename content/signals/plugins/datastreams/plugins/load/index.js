@@ -4,6 +4,8 @@ export default {
     tag: 'load',
     operator: async (info) => {
         console.log('Device loaded', info)
-        return await dataDevices.load(info) // Load the specified device into the API
+        const res = await dataDevices.load(info) // Load the specified device into the API
+        console.log('Success', res)
+        return true
     }
 }
