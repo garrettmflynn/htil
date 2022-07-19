@@ -3,7 +3,11 @@
         "button" : {
             "innerHTML": "Start data acquisition"
         },
-        "data" : {}
+        "data" : {
+            "arguments": {
+                "test": 12
+            }
+        }
     },
 
     "ports": { 

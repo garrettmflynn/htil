@@ -651,6 +651,8 @@ var GraphNode = class {
           if (child.tag in node.children) {
             if (!(node.children[child.tag] instanceof GraphNode))
               node.children[child.tag] = child;
+            if (!node.firstRun)
+              node.firstRun = true;
           }
         }
         if (node.parent) {
@@ -787,9 +789,8 @@ var GraphNode = class {
       properties = { operator: properties };
     }
     if (typeof properties === "object") {
-      let source;
       if (properties instanceof Graph) {
-        source = properties;
+        let source = properties;
         properties = {
           source,
           operator: (input) => {
@@ -847,19 +848,22 @@ var GraphNode = class {
           });
         }
       }
-      if (properties.tag) {
+      if (properties.tag && (graph || parentNode)) {
         if (graph?.nodes) {
           let hasnode = graph.nodes.get(properties.tag);
-          source = hasnode;
+          if (hasnode) {
+            Object.assign(this, hasnode);
+            if (!this.source)
+              this.source = hasnode;
+          }
         }
         if (parentNode?.nodes) {
           let hasnode = parentNode.nodes.get(properties.tag);
-          source = hasnode;
-        }
-        if (source) {
-          Object.assign(this, source);
-          if (!this.source)
-            this.source = source;
+          if (hasnode) {
+            Object.assign(this, hasnode);
+            if (!this.source)
+              this.source = hasnode;
+          }
         }
       }
       if (properties?.operator) {
@@ -913,6 +917,8 @@ var GraphNode = class {
         this.checkNodesHaveChildMapped(this.parent, this);
       if (!graph && typeof this.oncreate === "function")
         this.oncreate(this);
+      if (!this.firstRun)
+        this.firstRun = true;
     } else
       return properties;
   }
@@ -969,10 +975,37 @@ var Graph = class {
               if (n.tag !== tree[node].tag)
                 this.add(tree[node]);
             } else if (tree[node] instanceof Graph) {
-              if (n.tag !== tree[node].name) {
-                this.removeTree(n);
-                this.add(tree[node]);
-              }
+              let source = tree[node];
+              let properties = {};
+              if (source.operator)
+                properties.operator = source.operator;
+              if (source.children)
+                properties.children = source.children;
+              if (source.forward)
+                properties.forward = source.forward;
+              if (source.backward)
+                properties.backward = source.backward;
+              if (source.repeat)
+                properties.repeat = source.repeat;
+              if (source.recursive)
+                properties.recursive = source.recursive;
+              if (source.loop)
+                properties.loop = source.loop;
+              if (source.animate)
+                properties.animate = source.animate;
+              if (source.looper)
+                properties.looper = source.looper;
+              if (source.animation)
+                properties.animation = source.animation;
+              if (source.delay)
+                properties.delay = source.delay;
+              if (source.tag)
+                properties.tag = source.tag;
+              if (source.oncreate)
+                properties.oncreate = source.oncreate;
+              properties.nodes = source.nodes;
+              properties.source = source;
+              n.setProps(properties);
             } else {
               n.setProps(tree[node]);
             }
@@ -1919,7 +1952,7 @@ var Service = class extends Graph {
           });
         }
       }
-      if (service instanceof Graph && service.name) {
+      if (service instanceof Graph && service.name && enumRoutes) {
         routes = Object.assign({}, routes);
         for (const prop in routes) {
           let route = routes[prop];
@@ -2299,9 +2332,10 @@ var DOMService = class extends Graph {
       let elm = this.createElement(options);
       let oncreate = options.oncreate;
       delete options.oncreate;
-      let node = new GraphNode({
-        element: elm,
-        operator: (node2, origin, props) => {
+      if (!options.element)
+        options.element = elm;
+      if (!options.operator)
+        options.operator = (node2, origin, props) => {
           if (typeof props === "object")
             for (const key in props) {
               if (node2.element) {
@@ -2317,9 +2351,8 @@ var DOMService = class extends Graph {
               }
             }
           return props;
-        },
-        ...options
-      }, void 0, this);
+        };
+      let node = new GraphNode(options, void 0, this);
       let divs = Array.from(elm.querySelectorAll("*"));
       if (generateChildElementNodes) {
         divs = divs.map((d, i) => this.addElement({ element: d }));
@@ -2336,6 +2369,8 @@ var DOMService = class extends Graph {
         setTimeout(() => {
           if (typeof options.parentNode === "object")
             options.parentNode.appendChild(elm);
+          const newNode = this.nodes.get(node.tag);
+          this.elements[options.id].node = newNode;
           if (oncreate)
             oncreate(elm, this.elements[options.id]);
         }, 0.01);
@@ -2435,9 +2470,10 @@ var DOMService = class extends Graph {
       if (generateChildElementNodes) {
         divs = divs.map((d) => this.addElement({ element: d }));
       }
-      let node = new GraphNode({
-        element: elm,
-        operator: (node2, origin, props) => {
+      if (!options.element)
+        options.element = elm;
+      if (!options.operator)
+        options.operator = (node2, origin, props) => {
           if (typeof props === "object")
             for (const key in props) {
               if (node2.element) {
@@ -2446,14 +2482,15 @@ var DOMService = class extends Graph {
                     node2.element[key](...props[key]);
                   else
                     node2.element[key](props[key]);
+                } else if (key === "style") {
+                  Object.assign(node2.element[key], props[key]);
                 } else
                   node2.element[key] = props[key];
               }
             }
           return props;
-        },
-        ...completeOptions
-      }, void 0, this);
+        };
+      let node = new GraphNode(options, void 0, this);
       this.components[completeOptions.id] = {
         element: elm,
         class: CustomElement,
@@ -2528,9 +2565,10 @@ var DOMService = class extends Graph {
         }
       };
       this.templates[completeOptions.id] = completeOptions;
-      let node = new GraphNode({
-        element: elm,
-        operator: (node2, origin, props) => {
+      if (!options.element)
+        options.element = elm;
+      if (!options.operator)
+        options.operator = (node2, origin, props) => {
           if (typeof props === "object")
             for (const key in props) {
               if (node2.element) {
@@ -2539,14 +2577,15 @@ var DOMService = class extends Graph {
                     node2.element[key](...props[key]);
                   else
                     node2.element[key](props[key]);
+                } else if (key === "style") {
+                  Object.assign(node2.element[key], props[key]);
                 } else
                   node2.element[key] = props[key];
               }
             }
           return props;
-        },
-        ...completeOptions
-      }, void 0, this);
+        };
+      let node = new GraphNode(options, void 0, this);
       let canvas = elm.querySelector("canvas");
       if (completeOptions.style)
         Object.assign(canvas.style, completeOptions.style);
@@ -2622,7 +2661,7 @@ var DOMService = class extends Graph {
           });
         }
       }
-      if (service instanceof Graph && service.name) {
+      if (service instanceof Graph && service.name && enumRoutes) {
         routes = Object.assign({}, routes);
         for (const prop in routes) {
           let route = routes[prop];
@@ -2661,6 +2700,7 @@ var DOMService = class extends Graph {
         };
         childrenIter(routes[tag]);
       }
+      routes = Object.assign({}, routes);
       for (const route in routes) {
         if (typeof routes[route] === "object") {
           let r = routes[route];
@@ -3562,6 +3602,62 @@ var importFromOrigin = async (url, scriptLocation2, local = true, type7) => {
   return imported;
 };
 
+// src/extensions/arguments.ts
+var ArgumentGraphExtension = {
+  type: "tree",
+  condition: (treeEntry) => {
+    return !(treeEntry instanceof Graph);
+  },
+  transform: (treeEntry, app) => {
+    const operatorArgs = getFnParamInfo(treeEntry.operator);
+    if (treeEntry.arguments) {
+      for (let key in treeEntry.arguments) {
+        operatorArgs.set(key, treeEntry.arguments[key]);
+      }
+    }
+    const instanceTree = {};
+    Array.from(operatorArgs.entries()).forEach(([arg], i) => {
+      instanceTree[arg] = {
+        tag: arg,
+        operator: (input) => {
+          operatorArgs.set(arg, input);
+          if (i === 0) {
+            const nodeToRun = app.graph.nodes.get(treeEntry.tag);
+            const res = nodeToRun.run();
+            return res;
+          }
+          return input;
+        }
+      };
+    });
+    const propsCopy = Object.assign({}, treeEntry);
+    propsCopy.operator = (...args) => {
+      let updatedArgs = [];
+      let i = 0;
+      operatorArgs.forEach((v, k) => {
+        const isSpread = k.includes("...");
+        const currentArg = isSpread ? args.slice(i) : args[i];
+        let update = currentArg !== void 0 ? currentArg : v;
+        operatorArgs.set(k, update);
+        if (!isSpread)
+          update = [update];
+        updatedArgs.push(...update);
+        i++;
+      });
+      const res = treeEntry.operator(...updatedArgs);
+      return res;
+    };
+    let graph = new Graph(instanceTree, treeEntry.tag, propsCopy);
+    return graph;
+  }
+};
+var arguments_default = ArgumentGraphExtension;
+
+// src/extensions/index.ts
+var extensions_default = {
+  arguments: arguments_default
+};
+
 // src/App.ts
 var scriptLocation = new Error().stack.match(/([^ \n])*([a-z]*:\/\/\/?)*?[a-z0-9\/\\]*\.js/ig)[0];
 var App = class {
@@ -3661,7 +3757,6 @@ var App = class {
               output = { [output]: output };
             app.graph.operator = async (...args) => {
               for (let key in output) {
-                console.log(`global operator for ${this.name}`, ...args);
                 return new Promise(async (resolve) => {
                   const sub = app.graph.subscribe(output[key], (res) => {
                     resolve(res);
@@ -3676,23 +3771,10 @@ var App = class {
           }
           tree[tag] = app.graph;
         } else {
-          let instance = Object.assign({}, clsInfo);
-          instance.tag = tag;
-          instance = Object.assign(instance, info);
-          instance.transformArgs = (args, self) => {
-            let updatedArgs = [];
-            let i = 0;
-            self.arguments.forEach((v, k) => {
-              const currentArg = k.includes("...") ? args.slice(i) : args[i];
-              let update = currentArg !== void 0 ? currentArg : v;
-              self.arguments.set(k, update);
-              if (!Array.isArray(update))
-                update = [update];
-              updatedArgs.push(...update);
-              i++;
-            });
-            return updatedArgs;
-          };
+          let properties = Object.assign({}, clsInfo);
+          properties.tag = tag;
+          properties = Object.assign(properties, info);
+          const instance = extensions_default.arguments.transform(properties, this);
           tree[tag] = instance;
         }
       }));
@@ -3705,7 +3787,7 @@ var App = class {
             const input = inputPortPath.slice(-1)[0];
             let ref = tree;
             outputPortPath.forEach((str) => {
-              const newRef = ref[str] || ref.nodes.get(str);
+              const newRef = ref[str] || (ref.nodes?.get ? ref.nodes.get(str) : void 0);
               if (newRef)
                 ref = newRef;
             });
@@ -3789,11 +3871,9 @@ var App = class {
           this.graph = this.router.service;
           this.graph.nodes.forEach((node) => {
             if (node instanceof GraphNode) {
-              if (!node.source) {
-                if (node.loop) {
-                  node.loop = parseFloat(node.loop);
-                  node.run();
-                }
+              if (node.loop) {
+                node.loop = parseFloat(node.loop);
+                node.run();
               }
             } else
               console.warn(`${node.tag ?? node.name} not recognized`);

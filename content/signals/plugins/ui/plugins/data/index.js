@@ -5,12 +5,12 @@ let element;
 const paragraphs = {}
 
 export default {
-    operator: (id, data, time, test=100) => {
+    operator: (id, data, time) => {
         if (!paragraphs[id]) {
             paragraphs[id] = document.createElement('p')
             element.appendChild(paragraphs[id])
         }
-        paragraphs[id].innerHTML = `<b>${id}:</b> ${data} - ${test}`
+        paragraphs[id].innerHTML = `<b>${id}:</b> ${data}`
     },
 
     tagName: 'div',

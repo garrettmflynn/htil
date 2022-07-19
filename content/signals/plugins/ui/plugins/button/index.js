@@ -7,11 +7,9 @@ export default {
     innerHTML: 'Click Me',
     oncreate: (self, props) => { 
         self.onmousedown = () => {
-
-            props.node.run(true)
-
+            props.node.graph.run('pressed', true)
             const onMouseUp = () => {
-                props.node.run(false)
+                props.node.graph.run('pressed', false)
                 globalThis.removeEventListener('mouseup', onMouseUp)
             }
             globalThis.addEventListener('mouseup', onMouseUp)

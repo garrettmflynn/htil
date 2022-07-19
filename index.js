@@ -3,6 +3,7 @@
     import * as editorComponents from './external/editor/index.esm.js'
 
     import appInfo from './content/signals/index.js'
+    // import appInfo from '../brainsatplay-starter-kit/index.js'
 
     const app = new brainsatplay.App(appInfo)
     // const app = new brainsatplay.editable.App(appInfo)
@@ -25,16 +26,6 @@
         console.log('App', app)
 
         if (ok) editor.setGraph(activeApp.graph)
-
-        const domService = app.graph.nodes.get('ui').source
-        const buttonNode = domService.nodes.get('button')
-        let buttonElementNode = null
-        Object.keys(domService.elements).find(str => {
-            if (str.includes('button')){
-                buttonElementNode = domService.elements[str].node
-                return true
-            }
-        })
 
     }).catch(e => console.error('Invalid App', e))
 

@@ -28,7 +28,6 @@ export default {
     
     tagName: 'div',
     oncreate: (_, props) => {
-        console.log('oncreate start', props.node)
         self = props.node
     }
 }

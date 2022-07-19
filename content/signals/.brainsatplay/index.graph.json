@@ -7,7 +7,7 @@
     },
 
     "edges": {
-        "ui.button": {
+        "ui.button.pressed": {
             "synthetic": {}
         },
         "synthetic":  {
