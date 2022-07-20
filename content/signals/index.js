@@ -8,7 +8,6 @@ import ganglion from "../../devices/ganglion/index.js"
 
 import pkg from './package.json' assert {type: 'json'};
 import graph from './.brainsatplay/index.graph.json' assert {type: 'json'};
-import plugins from './.brainsatplay/index.plugins.json' assert {type: 'json'};
 
 export default {
     datastreams, 
@@ -20,6 +19,5 @@ export default {
     ['.brainsatplay']: {
         package: pkg,
         graph,
-        plugins
     }
 }

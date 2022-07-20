@@ -3,7 +3,7 @@ import dataDevices from "../index.js"
 
 let self;
 
-export default {
+const startPlugin = {
     tag: 'start',
     operator: async (input, ...data) => {
 
@@ -15,12 +15,12 @@ export default {
                 // Begin Tracking the Device Data
                 const ontrack = (track) => {
                     track.subscribe((data, timestamp) => {
-                        if (self) self.graph.run(self, 'data', track.contentHint, data, timestamp)
+                        startPlugin.self.graph.run(startPlugin.self, 'data', track.contentHint, data, timestamp)
                     })
                 }
                 
                 device.stream.getTracks().forEach(ontrack)
-                device.stream.ontrack = ontrack
+                device.stream.onaddtrack = ontrack
                 // return device
             })
         }
@@ -28,6 +28,8 @@ export default {
     
     tagName: 'div',
     oncreate: (_, props) => {
-        self = props.node
+        startPlugin.self = props.node
     }
 }
+
+export default startPlugin

@@ -1,16 +1,11 @@
 
-let self;
-let element;
-
-const paragraphs = {}
-
-export default {
+const dataPlugin = {
     operator: (id, data, time) => {
-        if (!paragraphs[id]) {
-            paragraphs[id] = document.createElement('p')
-            element.appendChild(paragraphs[id])
+        if (!dataPlugin.paragraphs[id]) {
+            dataPlugin.paragraphs[id] = document.createElement('p')
+            dataPlugin.element.appendChild(dataPlugin.paragraphs[id])
         }
-        paragraphs[id].innerHTML = `<b>${id}:</b> ${data}`
+        dataPlugin.paragraphs[id].innerHTML = `<b>${id}:</b> ${data}`
     },
 
     tagName: 'div',
@@ -21,7 +16,10 @@ export default {
     },
 
     oncreate: (el, props) => {
-        element = el
-        self = props.node
+        dataPlugin.element = el
+        dataPlugin.self = props.node
+        dataPlugin.paragraphs = {}
     }
 }
+
+export default dataPlugin

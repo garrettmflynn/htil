@@ -1,5 +1,0 @@
-{
-    "synthetic": "../../devices/synthetic/index.js",
-    "datastreams": "plugins/datastreams/index.js",
-    "ui": "plugins/ui/index.js"
-}

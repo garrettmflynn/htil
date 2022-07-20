@@ -4,9 +4,7 @@
             "innerHTML": "Start data acquisition"
         },
         "data" : {
-            "arguments": {
-                "test": 12
-            }
+      
         }
     },
 
