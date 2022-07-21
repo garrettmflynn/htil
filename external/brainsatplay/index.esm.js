@@ -33,6 +33,7 @@ function getFnParamInfo(fn) {
   matches.forEach((v) => {
     let [name2, value] = v.split("=");
     name2 = name2.trim();
+    name2 = name2.replace(/\d+$/, "");
     try {
       if (name2)
         info.set(name2, (0, eval)(`(${value})`));
@@ -169,8 +170,6 @@ var GraphNode = class {
       if (typeof operator !== "function")
         return operator;
       let params = getFnParamInfo(operator);
-      if (params.size === 0)
-        params.set("input", void 0);
       const keys = params.keys();
       const paramOne = keys.next().value;
       const paramTwo = keys.next().value;
@@ -915,7 +914,7 @@ var GraphNode = class {
         this.convertChildrenToNodes(this);
       if (this.parent instanceof GraphNode || this.parent instanceof Graph)
         this.checkNodesHaveChildMapped(this.parent, this);
-      if (!graph && typeof this.oncreate === "function")
+      if (typeof this.oncreate === "function")
         this.oncreate(this);
       if (!this.firstRun)
         this.firstRun = true;
@@ -929,26 +928,24 @@ var Graph = class {
     this.nodes = /* @__PURE__ */ new Map();
     this.state = state;
     this.tree = {};
-    this.add = (node = {}, fromTree = false) => {
+    this.add = (node = {}) => {
       let props = node;
       if (!(node instanceof GraphNode))
         node = new GraphNode(props, this, this);
+      else
+        this.nNodes++;
       if (node.tag)
         this.tree[node.tag] = props;
-      if (!fromTree) {
-        if (node.oncreate)
-          node.oncreate(node);
-      }
+      this.nodes.set(node.tag, node);
       return node;
     };
     this.setTree = (tree = this.tree) => {
       if (!tree)
         return;
-      let oncreate = {};
       for (const node in tree) {
         if (!this.nodes.get(node)) {
           if (typeof tree[node] === "function") {
-            this.add({ tag: node, operator: tree[node] }, true);
+            this.add({ tag: node, operator: tree[node] });
           } else if (typeof tree[node] === "object" && !Array.isArray(tree[node])) {
             if (!tree[node].tag)
               tree[node].tag = node;
@@ -961,10 +958,7 @@ var Graph = class {
           } else {
             this.add({ tag: node, operator: (self, origin, ...args) => {
               return tree[node];
-            } }, true);
-          }
-          if (this.nodes.get(node)?.oncreate) {
-            oncreate[node] = this.nodes.get(node).oncreate;
+            } });
           }
         } else {
           let n = this.nodes.get(node);
@@ -1036,9 +1030,6 @@ var Graph = class {
           }
         }
       });
-      for (const key in oncreate) {
-        oncreate[key](this.nodes.get(key));
-      }
     };
     this.get = (tag) => {
       return this.nodes.get(tag);
@@ -1907,7 +1898,7 @@ var Service = class extends Graph {
     this.loadDefaultRoutes = false;
     this.name = `service${Math.floor(Math.random() * 1e14)}`;
     this.keepState = true;
-    this.load = (routes, enumRoutes = true) => {
+    this.load = (routes, includeClassName = true, routeFormat = ".") => {
       if (!routes && !this.loadDefaultRoutes)
         return;
       let service;
@@ -1916,8 +1907,8 @@ var Service = class extends Graph {
           let mod = routes;
           routes = {};
           Object.getOwnPropertyNames(routes.module).forEach((prop) => {
-            if (enumRoutes)
-              routes[mod.name + "/" + prop] = routes.module[prop];
+            if (includeClassName)
+              routes[mod.name + routeFormat + prop] = routes.module[prop];
             else
               routes[prop] = routes.module[prop];
           });
@@ -1926,12 +1917,12 @@ var Service = class extends Graph {
           service.load();
           routes = service.routes;
         }
-      } else if (routes instanceof Graph && (routes.routes || routes.tree)) {
+      } else if (routes instanceof Graph) {
         service = routes;
-        if (routes.routes)
-          routes = routes.routes;
-        else if (routes.tree)
-          routes = routes.tree;
+        routes = {};
+        service.nodes.forEach((node) => {
+          routes[node.tag] = node;
+        });
       } else if (typeof routes === "object") {
         let name2 = routes.constructor.name;
         if (name2 === "Object") {
@@ -1945,19 +1936,19 @@ var Service = class extends Graph {
           let module = routes;
           routes = {};
           Object.getOwnPropertyNames(module).forEach((route) => {
-            if (enumRoutes)
-              routes[name2 + "/" + route] = module[route];
+            if (includeClassName)
+              routes[name2 + routeFormat + route] = module[route];
             else
               routes[route] = module[route];
           });
         }
       }
-      if (service instanceof Graph && service.name && enumRoutes) {
+      if (service instanceof Graph && service.name && includeClassName) {
         routes = Object.assign({}, routes);
         for (const prop in routes) {
           let route = routes[prop];
           delete routes[prop];
-          routes[service.name + "/" + prop] = route;
+          routes[service.name + routeFormat + prop] = route;
         }
       }
       if (this.loadDefaultRoutes) {
@@ -2042,7 +2033,7 @@ var Service = class extends Graph {
           let aliases = this.routes[prop].aliases;
           aliases.forEach((a) => {
             if (service)
-              routes[service.name + "/" + a] = this.routes[prop];
+              routes[service.name + routeFormat + a] = this.routes[prop];
             else
               routes[a] = this.routes[prop];
           });
@@ -2369,8 +2360,6 @@ var DOMService = class extends Graph {
         setTimeout(() => {
           if (typeof options.parentNode === "object")
             options.parentNode.appendChild(elm);
-          const newNode = this.nodes.get(node.tag);
-          this.elements[options.id].node = newNode;
           if (oncreate)
             oncreate(elm, this.elements[options.id]);
         }, 0.01);
@@ -2616,7 +2605,7 @@ var DOMService = class extends Graph {
       node.runAnimation(animation);
       return this.components[completeOptions.id];
     };
-    this.load = (routes, enumRoutes = true) => {
+    this.load = (routes, includeClassName = true, routeFormat = ".") => {
       if (!routes && !this.loadDefaultRoutes)
         return;
       let service;
@@ -2625,22 +2614,22 @@ var DOMService = class extends Graph {
           let mod = routes;
           routes = {};
           Object.getOwnPropertyNames(routes.module).forEach((prop) => {
-            if (enumRoutes)
-              routes[mod.name + "/" + prop] = routes.module[prop];
+            if (includeClassName)
+              routes[mod.name + routeFormat + prop] = routes.module[prop];
             else
               routes[prop] = routes.module[prop];
           });
         } else if (typeof routes === "function") {
-          service = new routes();
+          service = new routes({ loadDefaultRoutes: this.loadDefaultRoutes });
           service.load();
           routes = service.routes;
         }
-      } else if (routes instanceof Graph && (routes.routes || routes.tree)) {
+      } else if (routes instanceof Graph) {
         service = routes;
-        if (routes.routes)
-          routes = routes.routes;
-        else if (routes.tree)
-          routes = routes.tree;
+        routes = {};
+        service.nodes.forEach((node) => {
+          routes[node.tag] = node;
+        });
       } else if (typeof routes === "object") {
         let name2 = routes.constructor.name;
         if (name2 === "Object") {
@@ -2654,19 +2643,19 @@ var DOMService = class extends Graph {
           let module = routes;
           routes = {};
           Object.getOwnPropertyNames(module).forEach((route) => {
-            if (enumRoutes)
-              routes[name2 + "/" + route] = module[route];
+            if (includeClassName)
+              routes[name2 + routeFormat + route] = module[route];
             else
               routes[route] = module[route];
           });
         }
       }
-      if (service instanceof Graph && service.name && enumRoutes) {
+      if (service instanceof Graph && service.name && includeClassName) {
         routes = Object.assign({}, routes);
         for (const prop in routes) {
           let route = routes[prop];
           delete routes[prop];
-          routes[service.name + "/" + prop] = route;
+          routes[service.name + routeFormat + prop] = route;
         }
       }
       if (this.loadDefaultRoutes) {
@@ -2702,7 +2691,7 @@ var DOMService = class extends Graph {
       }
       routes = Object.assign({}, routes);
       for (const route in routes) {
-        if (typeof routes[route] === "object") {
+        if (typeof routes[route] === "object" && !(routes[route] instanceof GraphNode)) {
           let r = routes[route];
           if (typeof r === "object") {
             if (r.template) {
@@ -3574,14 +3563,26 @@ var join = (...paths) => {
   const split = paths.map((path) => {
     return path.split("/");
   }).flat();
-  return split.join("/");
+  return split.reduce((a, b) => {
+    if (!a)
+      a = b;
+    else if (!b)
+      return a;
+    else if (a.split("/")[0] !== b)
+      a = a + "/" + b;
+    return a;
+  }, "");
 };
 var getBase = (path) => {
   return path.split("/").slice(0, -1).join("/");
 };
 var dynamicImport = async (url, type7) => {
-  const assert = {};
-  let imported = type7 ? await import(url) : await import(url, { assert: { type: "json" } });
+  let imported;
+  if (!type7) {
+    imported = await import(url);
+  } else {
+    imported = await import(url, { assert: { type: "json" } });
+  }
   if (imported.default)
     imported = imported.default;
   return imported;
@@ -3615,6 +3616,8 @@ var ArgumentGraphExtension = {
         operatorArgs.set(key, treeEntry.arguments[key]);
       }
     }
+    if (operatorArgs.size === 0)
+      operatorArgs.set("trigger", void 0);
     const instanceTree = {};
     Array.from(operatorArgs.entries()).forEach(([arg], i) => {
       instanceTree[arg] = {
@@ -3661,10 +3664,9 @@ var extensions_default = {
 // src/App.ts
 var scriptLocation = new Error().stack.match(/([^ \n])*([a-z]*:\/\/\/?)*?[a-z0-9\/\\]*\.js/ig)[0];
 var App = class {
-  constructor(input, name2, router) {
+  constructor(input, options = {}) {
     this.remote = false;
     this.packagePath = "/package.json";
-    this.pluginPath = "/.brainsatplay/index.plugins.json";
     this.graphPath = "/.brainsatplay/index.graph.json";
     this.ok = false;
     this.parentNode = document.body;
@@ -3685,53 +3687,24 @@ var App = class {
     };
     this.set = (input, name2) => {
       this.name = name2 ?? "graph";
-      if (!input)
-        input = ".";
-      this["#base"] = null;
-      this.base = null;
       this.package = null;
-      this.remote = false;
-      if (typeof input === "string") {
-        const url = this.getURL(input);
-        if (url) {
-          this.remote = true;
-          this["#base"] = url;
-        } else
-          this["#base"] = this.base = input;
-        this.info = null;
-      } else {
-        this.info = input;
-        const appMetadata = this.info[".brainsatplay"];
-        for (let key in appMetadata) {
-          if (key === "base")
-            this["#base"] = this.base = appMetadata[key];
-          else
-            appMetadata[key] = this.checkJSONConversion(appMetadata[key]);
-        }
-      }
-      this.ok = false;
-      this.tree = null;
+      if (input) {
+        this.plugins = this.setInfo(input);
+        this.ok = false;
+        this.tree = null;
+      } else
+        console.warn("no info specified.");
     };
-    this.setPlugins = async (plugins = this.info[".brainsatplay"].plugins) => {
-      this.info[".brainsatplay"].plugins = plugins;
+    this.setInfo = (info) => {
+      this.info = info;
+      const appMetadata = this.info[".brainsatplay"];
+      for (let key in appMetadata) {
+        appMetadata[key] = this.checkJSONConversion(appMetadata[key]);
+      }
       const pluginsObject = {};
-      if (this.base) {
-        for (const name2 in plugins) {
-          if (typeof plugins[name2] === "string") {
-            let plugin = await importFromOrigin(this.join(this.base, plugins[name2]), scriptLocation, !this.remote);
-            if (typeof plugin === "string") {
-              const datauri = "data:text/javascript;base64," + btoa(plugin);
-              plugin = await dynamicImport(datauri);
-            }
-            pluginsObject[name2] = plugin;
-          } else
-            pluginsObject[name2] = plugins[name2];
-        }
-      } else {
-        for (let key in this.info) {
-          if (key !== ".brainsatplay")
-            pluginsObject[key] = this.info[key];
-        }
+      for (let key in info) {
+        if (key !== ".brainsatplay")
+          pluginsObject[key] = info[key];
       }
       this.plugins = pluginsObject;
       return this.plugins;
@@ -3742,9 +3715,13 @@ var App = class {
       const nodes = Object.entries(graph.nodes ?? {});
       await Promise.all(nodes.map(async ([tag, info]) => {
         const [cls, id] = tag.split("_");
-        const clsInfo = this.plugins[cls];
+        const clsInfo = this.plugins[cls] ?? {};
         if (clsInfo[".brainsatplay"]) {
-          const app = this.nested[tag] = new App(clsInfo, tag, this.router);
+          const app = this.nested[tag] = new App(clsInfo, {
+            name: tag,
+            router: this.router,
+            debug: this.debug
+          });
           app.setParent(this.parentNode);
           await app.start();
           this.router.load(app.graph, false);
@@ -3812,10 +3789,16 @@ var App = class {
     };
     this.setPackage = (pkg) => {
       this.package = pkg;
-      if (this["#base"])
-        this.base = this.join(this["#base"], this.getBase(this.package.main));
     };
-    this.init = async () => {
+    this.init = async (input) => {
+      if (input)
+        this.set(input);
+      if (!this.compile) {
+        if (!this.info)
+          return false;
+        else if (!this.info[".brainsatplay"])
+          return false;
+      }
       if (this.compile instanceof Function) {
         if (!this.info)
           this.info = {
@@ -3825,28 +3808,12 @@ var App = class {
         return;
       } else {
         if (!this.package) {
-          if (".brainsatplay" in this.info) {
-            const pkg = this.info[".brainsatplay"].package;
-            if (pkg)
-              this.setPackage(pkg);
-            else
-              console.error("No package.json has been included...");
-          } else {
-            let pkg = await this.json(this["#base"] + this.packagePath);
+          const pkg = this.info[".brainsatplay"].package;
+          if (pkg)
             this.setPackage(pkg);
-          }
+          else
+            console.error("No package.json has been included...");
         }
-        if (!this.info) {
-          const graphPath = this.join(this.base, this.graphPath);
-          const pluginPath = this.join(this.base, this.pluginPath);
-          let graph = await this.json(graphPath);
-          let plugins = await this.json(pluginPath);
-          this.info[".brainsatplay"] = {
-            graph,
-            plugins
-          };
-        }
-        this.plugins = await this.setPlugins();
         this.tree = await this.setTree();
       }
     };
@@ -3856,19 +3823,16 @@ var App = class {
       } else
         console.warn("Input is not a valid HTML element", parentNode);
     };
-    this.start = async () => {
+    this.start = async (input) => {
       this.stop();
-      await this.init();
+      await this.init(input);
       if (this.ok) {
-        const mainGraph = new DOMService({
+        this.graph = new DOMService({
           name: this.name,
           routes: this.tree
         }, this.parentNode);
-        if (this.isNested)
-          this.graph = mainGraph;
-        else {
-          this.router.load(mainGraph, false);
-          this.graph = this.router.service;
+        if (!this.isNested) {
+          this.router.load(this.graph, false);
           this.graph.nodes.forEach((node) => {
             if (node instanceof GraphNode) {
               if (node.loop) {
@@ -3902,12 +3866,13 @@ var App = class {
     };
     this.onstop = () => {
     };
-    if (router) {
-      this.router = router;
+    this.debug = options.debug;
+    if (options.router) {
+      this.router = options.router;
       this.isNested = true;
     } else
       this.router = new Router();
-    this.set(input, name2);
+    this.set(input, options.name);
     this.graph = null;
     this.animated = {};
   }
@@ -8026,6 +7991,7 @@ var transfer = async (previousSystem, targetSystem, transferList) => {
     await Promise.all(notTransferred.map(async (f) => transferEach(f, targetSystem)));
     const toc = performance.now();
     console.warn(`Time to transfer files to ${targetSystem.name}: ${toc - tic}ms`);
+    targetSystem.writable = false;
     await previousSystem.apply(targetSystem);
     await Promise.all(notTransferred.map(async (f) => f.save(true)));
   }
@@ -8051,7 +8017,8 @@ var get2 = (path, rel = "") => {
     if (splitPath.length == 1 || splitPath.length > 1 && splitPath.includes(""))
       dirTokens.push(potentialFile);
   }
-  const extensionTokens = path.split("/").filter((str) => {
+  const pathTokens = path.split("/").filter((str) => !!str);
+  const extensionTokens = pathTokens.filter((str) => {
     if (str === "..") {
       if (dirTokens.length == 0)
         console.error("Derived path is going out of the valid filesystem!");
@@ -8677,6 +8644,7 @@ var objToString = (obj) => {
   ret += "\n}";
   return ret;
 };
+var re = /import([ \n\t]*(?:\* (?:as .*))?(?:[^ \n\t\{\}]+[ \n\t]*,?)?(?:[ \n\t]*\{(?:[ \n\t]*[^ \n\t"'\{\}]+[ \n\t]*,?)+\})?[ \n\t]*)from[ \n\t]*(['"])([^'"\n]+)(?:['"])([ \n\t]*assert[ \n\t]*{type:[ \n\t]*(['"])([^'"\n]+)(?:['"])})?/g;
 var esmImport = async (text) => {
   const moduleDataURI = "data:text/javascript;base64," + btoa(text);
   let imported = await import(moduleDataURI);
@@ -8693,7 +8661,6 @@ var safeESMImport = async (text, config = {}, onBlob) => {
     const needsRoot = config.system.root && !config.system.native;
     let childBase = needsRoot ? get2(base2, config.system.root) : base2;
     const importInfo = {};
-    var re = /import([ \n\t]*(?:[^ \n\t\{\}]+[ \n\t]*,?)?(?:[ \n\t]*\{(?:[ \n\t]*[^ \n\t"'\{\}]+[ \n\t]*,?)+\})?[ \n\t]*)from[ \n\t]*(['"])([^'"\n]+)(?:['"])([ \n\t]*assert[ \n\t]*{type:[ \n\t]*(['"])([^'"\n]+)(?:['"])})?/g;
     let m;
     do {
       m = re.exec(text);
@@ -8703,8 +8670,6 @@ var safeESMImport = async (text, config = {}, onBlob) => {
         text = text.replace(m[0], ``);
         const variables = m[1].trim().split(",");
         importInfo[m[3]] = variables;
-        if (m[5])
-          console.warn(`Importing ${m[3]} as a ${m[5]} file`);
       }
     } while (m);
     for (let path in importInfo) {
@@ -9121,7 +9086,8 @@ var System = class {
       }
       this.root = system.root;
     };
-    this.apply(Object.assign(systemInfo, { name: name2 }));
+    const info = Object.assign({}, systemInfo);
+    this.apply(Object.assign(info, { name: name2 }));
     this.addGroup("system", {}, (file, path, files) => {
       let target = files.system;
       let split = path.split("/");
@@ -9389,7 +9355,7 @@ var Plugins = class {
     };
     this.get = async (name2, type7 = "metadata") => {
       if (type7 === "module")
-        await this.module(name2);
+        return await this.module(name2);
       else {
         let path = this.getPath(name2);
         if (this["#plugins"][name2] && !path.includes(this.base) && !path.includes("package.json")) {
@@ -9479,13 +9445,15 @@ var Plugins = class {
 
 // src/editable/App.ts
 var EditableApp = class {
-  constructor(input, options) {
+  constructor(input, options = {}) {
     this.ignore = [".DS_Store", ".git"];
     this.debug = false;
     this.options = {
       ignore: [".DS_Store", ".git"],
       debug: false
     };
+    this.packagePath = "/package.json";
+    this.parentNode = document.body;
     this.compile = async () => {
       const packageContents = await (await this.filesystem.open("package.json")).body;
       if (packageContents) {
@@ -9493,33 +9461,49 @@ var EditableApp = class {
         this.plugins = new Plugins(this.filesystem);
         await this.plugins.init();
         if (file) {
-          const mainPlugins = await this.plugins.get(packageContents.main, "plugins");
+          const main = await this.plugins.get(packageContents.main, "module");
           const mainGraph = await this.plugins.get(packageContents.main, "graph");
           this.active.setPackage(packageContents);
-          await this.active.setPlugins(mainPlugins);
+          await this.active.setInfo(main);
           await this.active.setTree(mainGraph);
         } else
           console.error('The "main" field in the supplied package.json is not pointing to an appropriate entrypoint.');
       }
     };
-    this.createFilesystem = async (input, options = this.options) => {
-      if (!input && !(this.filesystem instanceof LocalSystem))
-        input = this.filesystem;
-      let system = new LocalSystem(input, options);
+    this.join = join;
+    this.createFilesystem = async (input = this.filesystem, options = this.options) => {
+      try {
+        new URL(input ?? "").href;
+        input = this.join(input, this.packagePath);
+      } catch {
+      }
+      let clonedOptions = Object.assign({}, options);
+      let system = new LocalSystem(input, clonedOptions);
       return await system.init().then(() => system).catch(() => void 0);
     };
-    this.start = async (input) => {
+    this.setParent = (parentNode) => {
+      if (parentNode instanceof HTMLElement) {
+        this.parentNode = parentNode;
+      } else
+        console.warn("Input is not a valid HTML element", parentNode);
+    };
+    this.start = async (input = this.filesystem) => {
+      this.filesystem = input;
       await this.stop();
       const system = await this.createFilesystem(input);
+      this.active = new App(void 0, this.options);
       if (system) {
         this.filesystem = system;
-        this.active = new App(this.filesystem.root);
         this.active.compile = this.compile;
-        this.active.onstart = this.onstart;
-        this.active.onstop = this.onstop;
-        return await this.active.start();
-      } else
-        return false;
+      } else {
+        this.active.set(input);
+        delete this.filesystem;
+        delete this.compile;
+      }
+      this.active.setParent(this.parentNode);
+      this.active.onstart = this.onstart;
+      this.active.onstop = this.onstop;
+      return await this.active.start();
     };
     this.stop = async () => {
       if (this.active)
@@ -9527,7 +9511,8 @@ var EditableApp = class {
     };
     this.save = async () => {
       await this.stop();
-      await this.filesystem.save();
+      if (this.filesystem)
+        await this.filesystem.save();
       await this.active.start();
     };
     this.filesystem = input;

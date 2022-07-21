@@ -5,11 +5,10 @@
     import appInfo from './content/signals/index.js'
     // import appInfo from '../brainsatplay-starter-kit/index.js'
 
-    const app = new brainsatplay.App(appInfo)
-    // const app = new brainsatplay.editable.App(appInfo)
+    const app = new brainsatplay.App()
+    // const app = new brainsatplay.editable.App()
     const editor = new editorComponents.Editor()
     editor.setApp(app)
-
 
     const ui = document.createElement('div')
     editor.setUI(ui)
