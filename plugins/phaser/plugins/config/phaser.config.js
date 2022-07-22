@@ -150,9 +150,8 @@ function update(time, delta) {
 }
 
 // Uses window.Phaser
-const defaultConfig = (parent) => {
+const defaultConfig = () => {
  const config = {
-    parent,
     type: window.Phaser.AUTO,
     width: "100",
     height: "100",

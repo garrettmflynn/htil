@@ -33,7 +33,7 @@ tinybuild
 - Try to join forces with Kyle Mathewson on [EEGEdu](https://github.com/kylemath/EEGEdu)
 - Compose tutorials using the [brainsatplay] framework 
     - e.g. editable / draggable text to change the parameters of a bandpass filter
-- Integrate [phaser](https://phaser.io/) (based on [mci-emg-2022](https://github.com/htil/mci-emg-2022) or the [follow-zoom](https://phaser.io/examples/v3/view/camera/follow-zoom) example) so that we can clearly show a flow between raw data -> processing pipeline -> character control
+- Clearly show a flow between raw data -> processing pipeline -> character control using [phaser](https://phaser.io/)
 
 
 [brainsatplay]: https://github.com/brainsatplay/brainsatplay

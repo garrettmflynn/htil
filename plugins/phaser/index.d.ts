@@ -1,23 +1,22 @@
-export default ui;
-declare const ui: {
-    button: {
-        operator: () => HTMLButtonElement;
-        element: HTMLButtonElement;
-        innerHTML: string;
-        style: {};
+export default phaserPlugin;
+declare const phaserPlugin: {
+    phaserObject: {
+        operator: () => any;
+        oncreate: (node: any) => void;
     };
-    data: {
-        operator: (input: any) => HTMLDivElement;
-        element: HTMLDivElement;
-        style: {
-            background: string;
-            width: string;
-            height: string;
-        };
+    game: {
+        operator: (config: any) => any;
     };
+    config: {
+        config: {};
+        operator: (node: any) => any;
+    };
+    button: typeof button;
+    data: typeof data;
     ".brainsatplay": {
         package: any;
         graph: any;
-        plugins: any;
     };
 };
+import button from "./plugins/button/index.js";
+import data from "./plugins/data/index.js";

@@ -125,7 +125,7 @@ var GraphNode = class {
   constructor(properties = {}, parentNode, graph) {
     this.nodes = /* @__PURE__ */ new Map();
     this.arguments = /* @__PURE__ */ new Map();
-    this.initial = {};
+    this._initial = {};
     this.state = state;
     this.isLooping = false;
     this.isAnimating = false;
@@ -405,7 +405,7 @@ var GraphNode = class {
       this.animation = animation;
       if (!animation)
         this.animation = this.operator;
-      if (node.animate && !node.isAnimating) {
+      if (node.animate && !node.isAnimating && "requestAnimationFrame" in window) {
         node.isAnimating = true;
         let anim = async () => {
           if (node.isAnimating) {
@@ -601,7 +601,7 @@ var GraphNode = class {
         branch: node.branch,
         oncreate: node.oncreate,
         DEBUGNODE: node.DEBUGNODE,
-        ...this.initial
+        ...this._initial
       };
     };
     this.setProps = (props = {}) => {
@@ -705,10 +705,22 @@ var GraphNode = class {
       if (n?.children) {
         for (const key in n.children) {
           if (!(n.children[key] instanceof GraphNode)) {
-            if (typeof n.children[key] === "undefined" || n.children[key] === true) {
-              n.children[key] = n.graph.get(key);
-              if (!n.children[key])
-                n.children[key] = n.nodes.get(key);
+            if (typeof n.children[key] === "object") {
+              if (!n.children[key].tag)
+                n.children[key].tag = key;
+              n.children[key] = new GraphNode(n.children[key], n, n.graph);
+              this.checkNodesHaveChildMapped(n, n.children[key]);
+            } else {
+              if (typeof n.children[key] === "undefined" || n.children[key] == true) {
+                n.children[key] = n.graph.get(key);
+                if (!n.children[key])
+                  n.children[key] = n.nodes.get(key);
+              } else if (typeof n.children[key] === "string") {
+                let k = n.children[key];
+                n.children[key] = n.graph.get(k);
+                if (!n.children[key])
+                  n.children[key] = n.nodes.get(key);
+              }
               if (n.children[key] instanceof GraphNode) {
                 if (n.graph) {
                   let props = n.children[key].getProps();
@@ -717,32 +729,15 @@ var GraphNode = class {
                   if (n.source)
                     n.children[key] = new GraphNode(props, n, n.source);
                   else {
-                    if (props.tag)
-                      props.tag = `${props.tag}${n.graph.nNodes + 1}`;
                     n.children[key] = new GraphNode(props, n, n.graph);
                   }
+                } else {
+                  n.nodes.set(n.children[key].tag, n.children[key]);
+                  this.checkNodesHaveChildMapped(n, n.children[key]);
                 }
-                n.nodes.set(n.children[key].tag, n.children[key]);
                 if (!(n.children[key].tag in n))
                   n[n.children[key].tag] = n.children[key].tag;
-                this.checkNodesHaveChildMapped(n, n.children[key]);
               }
-            } else if (typeof n.children[key] === "string") {
-              let child = n.graph.get(n.children[key]);
-              n.children[key] = child;
-              if (!child)
-                child = n.nodes.get(key);
-              if (child instanceof GraphNode) {
-                n.nodes.set(n.children[key].tag, n.children[key]);
-                if (!(n.children[key].tag in n))
-                  n[n.children[key].tag] = n.children[key].tag;
-                this.checkNodesHaveChildMapped(n, child);
-              }
-            } else if (typeof n.children[key] === "object") {
-              if (!n.children[key].tag)
-                n.children[key].tag = key;
-              n.children[key] = new GraphNode(n.children[key], n, n.graph);
-              this.checkNodesHaveChildMapped(n, n.children[key]);
             }
           }
         }
@@ -825,6 +820,8 @@ var GraphNode = class {
       properties = { operator: properties };
     }
     if (typeof properties === "object") {
+      if (properties instanceof GraphNode && properties._initial)
+        Object.assign(properties, properties._initial);
       if (properties instanceof Graph) {
         let source = properties;
         properties = {
@@ -874,7 +871,14 @@ var GraphNode = class {
           properties.tag = source.tag;
         if (source.oncreate)
           properties.oncreate = source.oncreate;
+        if (source.node) {
+          if (source.node._initial)
+            Object.assign(properties, source.node._initial);
+        }
+        if (source._initial)
+          Object.assign(properties, source._initial);
         this.nodes = source.nodes;
+        source.node = this;
         if (graph) {
           source.nodes.forEach((n) => {
             if (!graph.nodes.get(n.tag)) {
@@ -885,20 +889,21 @@ var GraphNode = class {
         }
       }
       if (properties.tag && (graph || parentNode)) {
+        let hasnode;
         if (graph?.nodes) {
-          let hasnode = graph.nodes.get(properties.tag);
-          if (hasnode) {
-            Object.assign(this, hasnode);
-            if (!this.source)
-              this.source = hasnode;
-          }
-        } else if (parentNode?.nodes) {
-          let hasnode = parentNode.nodes.get(properties.tag);
-          if (hasnode) {
-            Object.assign(this, hasnode);
-            if (!this.source)
-              this.source = hasnode;
-          }
+          hasnode = graph.nodes.get(properties.tag);
+        }
+        if (!hasnode && parentNode?.nodes) {
+          hasnode = parentNode.nodes.get(properties.tag);
+        }
+        if (hasnode) {
+          Object.assign(this, hasnode);
+          if (!this.source)
+            this.source = hasnode;
+          let props = hasnode.getProps();
+          delete props.graph;
+          delete props.parent;
+          Object.assign(properties, props);
         }
       }
       if (properties?.operator) {
@@ -920,8 +925,10 @@ var GraphNode = class {
       let keys = Object.getOwnPropertyNames(this);
       for (const key in properties) {
         if (!keys.includes(key))
-          this.initial[key] = properties[key];
+          this._initial[key] = properties[key];
       }
+      if (properties.children)
+        this._initial.children = Object.assign({}, properties.children);
       Object.assign(this, properties);
       if (!this.tag) {
         if (graph) {
@@ -932,13 +939,14 @@ var GraphNode = class {
       }
       if (parentNode)
         this.parent = parentNode;
-      if (graph)
-        this.graph = graph;
       if (graph) {
-        if (!graph.nodes.get(this.tag)) {
-          graph.nNodes++;
+        this.graph = graph;
+        if (graph.nodes.get(this.tag)) {
+          parentNode.nodes.set(this.tag, this);
+          this.tag = `${this.tag}${graph.nNodes + 1}`;
         }
         graph.nodes.set(this.tag, this);
+        graph.nNodes++;
       }
       if (typeof properties.tree === "object") {
         for (const key in properties.tree) {
@@ -1038,6 +1046,8 @@ var Graph = class {
                 properties.tag = source.tag;
               if (source.oncreate)
                 properties.oncreate = source.oncreate;
+              if (source.node?._initial)
+                Object.assign(properties, source.node._initial);
               properties.nodes = source.nodes;
               properties.source = source;
               n.setProps(properties);
@@ -1244,8 +1254,10 @@ var Graph = class {
       });
     };
     this.tag = tag ? tag : `graph${Math.floor(Math.random() * 1e11)}`;
-    if (props)
+    if (props) {
       Object.assign(this, props);
+      this._initial = props;
+    }
     if (tree || Object.keys(this.tree).length > 0)
       this.setTree(tree);
   }
@@ -3796,8 +3808,7 @@ var ArgumentGraphExtension = {
       else
         return treeEntry.operator(...updatedArgs);
     };
-    let graph = new Graph(instanceTree, treeEntry.tag, propsCopy);
-    return graph;
+    return new Graph(instanceTree, treeEntry.tag, propsCopy);
   }
 };
 var arguments_default = ArgumentGraphExtension;
@@ -3861,48 +3872,52 @@ var App = class {
       const nodes = Object.entries(graph.nodes ?? {});
       await Promise.all(nodes.map(async ([tag, info]) => {
         const [cls, id] = tag.split("_");
-        const clsInfo = Object.assign({}, this.plugins[cls]) ?? {};
-        for (let key in clsInfo) {
-          if (typeof clsInfo[key] === "object")
-            clsInfo[key] = Object.assign({}, clsInfo[key]);
-        }
-        if (clsInfo[".brainsatplay"]) {
-          const app = this.nested[tag] = new App(clsInfo, {
-            name: tag,
-            router: this.router,
-            debug: this.debug
-          });
-          app.setParent(this.parentNode);
-          await app.start();
-          this.router.load(app.graph, false, true);
-          if (app.info[".brainsatplay"].graph.ports) {
-            let input = app.info[".brainsatplay"].graph.ports.input;
-            let output = app.info[".brainsatplay"].graph.ports.output;
-            if (typeof input === "string")
-              input = { [input]: input };
-            if (typeof output === "string")
-              output = { [output]: output };
-            app.graph.operator = async (...args) => {
-              for (let key in output) {
-                return new Promise(async (resolve) => {
-                  const sub = app.graph.subscribe(output[key], (res) => {
-                    resolve(res);
-                  });
-                  await Promise.all(Object.values(input).map(async (n) => {
-                    await app.graph.run(n, ...args);
-                  }));
-                  app.graph.unsubscribe(output[key], sub);
-                });
-              }
-            };
+        const ogClsInfo = this.plugins[cls];
+        if (ogClsInfo) {
+          const clsInfo = Object.assign({}, ogClsInfo) ?? {};
+          for (let key in clsInfo) {
+            if (typeof clsInfo[key] === "object")
+              clsInfo[key] = Object.assign({}, clsInfo[key]);
           }
-          tree[tag] = app.graph;
-        } else {
-          clsInfo.tag = tag;
-          const properties = Object.assign(clsInfo, info);
-          const instance = extensions_default.arguments.transform(properties, this);
-          tree[tag] = instance;
-        }
+          if (clsInfo[".brainsatplay"]) {
+            const app = this.nested[tag] = new App(clsInfo, {
+              name: tag,
+              router: this.router,
+              debug: this.debug
+            });
+            app.setParent(this.parentNode);
+            await app.start();
+            this.router.load(app.graph, false, true);
+            if (app.info[".brainsatplay"].graph.ports) {
+              let input = app.info[".brainsatplay"].graph.ports.input;
+              let output = app.info[".brainsatplay"].graph.ports.output;
+              if (typeof input === "string")
+                input = { [input]: input };
+              if (typeof output === "string")
+                output = { [output]: output };
+              app.graph.operator = async (...args) => {
+                for (let key in output) {
+                  return new Promise(async (resolve) => {
+                    const sub = app.graph.subscribe(output[key], (res) => {
+                      resolve(res);
+                    });
+                    await Promise.all(Object.values(input).map(async (n) => {
+                      await app.graph.run(n, ...args);
+                    }));
+                    app.graph.unsubscribe(output[key], sub);
+                  });
+                }
+              };
+            }
+            tree[tag] = app.graph;
+          } else {
+            clsInfo.tag = tag;
+            const properties = Object.assign(clsInfo, info);
+            const instance = extensions_default.arguments.transform(properties, this);
+            tree[tag] = instance;
+          }
+        } else
+          console.warn(`No information found for the ${cls} plugin. Please export this from your main file.`);
       }));
       if (graph.edges) {
         for (let outputInfo in graph.edges) {
