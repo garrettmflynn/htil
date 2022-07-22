@@ -1,0 +1,23 @@
+{
+    "nodes": {
+        "button_1" : {
+            "innerHTML": "Start synthetic data generation"
+        },
+        "button_2" : {
+            "innerHTML": "Connect Ganglion"
+        },
+        "button_3" : {
+            "innerHTML": "Connect Muse"
+        },
+        "data" : {
+      
+        }
+    },
+
+    "ports": { 
+        "input": {
+            "data": "data"
+        },
+        "output": "button"
+    }
+}

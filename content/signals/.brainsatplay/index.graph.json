@@ -2,17 +2,35 @@
 
     "nodes": {
         "synthetic": {},
+        "ganglion": {},
+        "muse": {},
         "datastreams": {},
         "ui": {}
     },
 
     "edges": {
-        "ui.button.pressed": {
+
+        "ui.button_1": {
             "synthetic": {}
         },
         "synthetic":  {
             "datastreams.start": {}
         },
+
+        "ui.button_2": {
+            "ganglion": {}
+        },
+        "ganglion":  {
+            "datastreams.start": {}
+        },
+
+        "ui.button_3": {
+            "muse": {}
+        },
+        "muse":  {
+            "datastreams.start": {}
+        },
+
         "datastreams.start":  {
             "ui.data": {}
         }

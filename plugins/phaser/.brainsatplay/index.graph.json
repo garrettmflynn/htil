@@ -1,0 +1,15 @@
+{
+    "nodes": {
+        "phaserObject": {},
+        "config": {},
+        "game": {}
+    },
+    "edges": {
+        "phaserObject": {
+            "config": {}
+        },
+        "config": {
+            "game": {}
+        }
+    }
+}

@@ -2,7 +2,8 @@
     import * as brainsatplay from './external/brainsatplay/index.esm.js'
     import * as editorComponents from './external/editor/index.esm.js'
 
-    import appInfo from './content/signals/index.js'
+    import appInfo from './content/phaser/index.js'
+    // import appInfo from './content/signals/index.js'
     // import appInfo from '../brainsatplay-starter-kit/index.js'
 
     const app = new brainsatplay.App()
@@ -11,6 +12,7 @@
     editor.setApp(app)
 
     const ui = document.createElement('div')
+    ui.style.width = ui.style.height = '100%'
     editor.setUI(ui)
 
     app.setParent(ui)
