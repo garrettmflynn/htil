@@ -1,6 +1,7 @@
 
 const dataPlugin = {
     operator: (id, data, time) => {
+
         if (!dataPlugin.paragraphs[id]) {
             dataPlugin.paragraphs[id] = document.createElement('p')
             dataPlugin.element.appendChild(dataPlugin.paragraphs[id])
@@ -15,7 +16,7 @@ const dataPlugin = {
         padding: '25px'
     },
 
-    oncreate: (el, props) => {
+    onrender: (el, props) => {
         dataPlugin.element = el
         dataPlugin.self = props.node
         dataPlugin.paragraphs = {}
