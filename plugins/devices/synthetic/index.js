@@ -33,6 +33,4 @@ const customDevice = {
     protocols: []
 }
 
-export default {
-    operator: () => customDevice
-}
+export default (trigger) => (trigger) ? customDevice : undefined

@@ -1,26 +1,29 @@
 
-const dataPlugin = {
-    operator: (id, data, time) => {
+// State (TODO: Do these overlap?)
+export let paragraphs;
+export let self;
+export let element;
 
-        if (!dataPlugin.paragraphs[id]) {
-            dataPlugin.paragraphs[id] = document.createElement('p')
-            dataPlugin.element.appendChild(dataPlugin.paragraphs[id])
-        }
-        dataPlugin.paragraphs[id].innerHTML = `<b>${id}:</b> ${data}`
-    },
+const operator = (id, data) => {
 
-    tagName: 'div',
-    style: {
-        width: '300px',
-        height: '100px',
-        padding: '25px'
-    },
-
-    onrender: (el, props) => {
-        dataPlugin.element = el
-        dataPlugin.self = props.node
-        dataPlugin.paragraphs = {}
+    if (!paragraphs[id]) {
+        paragraphs[id] = document.createElement('p')
+        element.appendChild(paragraphs[id])
     }
+    paragraphs[id].innerHTML = `<b>${id}:</b> ${data}`
 }
 
-export default dataPlugin
+export const tagName = 'div'
+export const style = {
+    width: '300px',
+    height: '100px',
+    padding: '25px'
+}
+
+export const onrender = (el, props) => {
+    element = el
+    self = props.node
+    paragraphs = {}
+}
+
+export default operator

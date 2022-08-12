@@ -1,0 +1,28 @@
+{
+    "graph": {
+        "nodes": {
+            "button_1" : {
+                "innerHTML": "Start synthetic data generation",
+                "src": "button/index.js"
+            },
+            "button_2" : {
+                "innerHTML": "Connect Ganglion",
+                "src": "button/index.js"
+            },
+            "button_3" : {
+                "innerHTML": "Connect Muse",
+                "src": "button/index.js"
+            },
+            "data" : {
+                "src": "data/index.js"
+            }
+        },
+
+        "ports": { 
+            "input": {
+                "data": "data"
+            },
+            "output": "button"
+        }
+    }
+}

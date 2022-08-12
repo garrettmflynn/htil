@@ -14,17 +14,16 @@ script.onload = function () {
 };
 
 // Return an instance of Phaser to signal the existence of the window variable
-const phaser = {
-    operator: () => {
-        if (window.Phaser) return window.Phaser
-        else return new Promise(resolve => onResolve = resolve)
-    },
-    oncreate: (node) => {
-        if (window.Phaser) node.run() // run node if phaser exists
-        else {
-            nodes[node.tag] = node // set link to node
-        }
+const operator = () => {
+    if (window.Phaser) return window.Phaser
+    else return new Promise(resolve => onResolve = resolve)
+}
+
+export const oncreate = (node) => {
+    if (window.Phaser) node.run() // run node if phaser exists
+    else {
+        nodes[node.tag] = node // set link to node
     }
 }
 
-export default phaser
+export default operator

@@ -1,0 +1,38 @@
+{
+    "graph": {
+
+        "nodes": {
+            "phaserObject": {
+                "src": "plugins/phaser/index.js"
+            },
+            "config": {
+                "src": "plugins/config/index.js"
+            },
+            "config_1": {
+                "src": "plugins/config/index.js",
+                "config": {
+                    "physics": {
+                        "default": "arcade",
+                        "arcade": {
+                            "gravity": {
+                                "y": 200
+                            }
+                        }
+                    }
+                }
+            },
+            "game": {
+                "src": "plugins/game/index.js"
+            }
+        },
+        "edges": {
+            "phaserObject": {
+                "config": {},
+                "config_1": {}
+            },
+            "config": {
+                "game": {}
+            }
+        }
+    }
+}
