@@ -3,7 +3,7 @@
 
         "nodes": {
             "phaser": {
-                "src": "../../plugins/phaser/index.wasl.json"
+                "src": "https://raw.githubusercontent.com/garrettmflynn/phaser/main/src/index.wasl.json"
             }
         },
 
