@@ -2,7 +2,7 @@
     "graph": {
         "nodes": {
             "start" : {
-                "src": "start/index.js"
+                "src": "plugins/start/index.js"
             }
         },
 

@@ -2,11 +2,15 @@
     import * as brainsatplay from './external/brainsatplay/index.esm.js'
     import * as editorComponents from './external/editor/index.esm.js'
 
-    import appInfo from './content/phaser/index.js'
-    // import appInfo from './content/signals/index.js'
-    // import appInfo from '../brainsatplay-starter-kit/index.js'
+    // const appInfo = '../brainsatplay-starter-kit/index.wasl.json'
+    // const appInfo = './content/phaser/index.wasl.json'
+    const appInfo = './content/signals/index.wasl.json'
 
-    const app = new brainsatplay.App()
+    const app = new brainsatplay.App(appInfo, {
+        relativeTo: import.meta.url
+    })
+
+    
     // const app = new brainsatplay.editable.App()
     const editor = new editorComponents.Editor()
     editor.setApp(app)
@@ -22,14 +26,21 @@
     app.onstart = editor.start
     
 
-    app.start(appInfo).then(ok => {
+    app.start().then(ok => {
 
         console.log('App', app)
 
         if (ok) editor.setGraph(activeApp.graph)
+        else {
+            console.log('Errors', app.options.errors)
+            console.log('Warnings', app.options.warnings)
+        }
+
+        console.log('files', app.options.files)
 
     }).catch(e => console.error('Invalid App', e))
 
+    
 
     document.getElementById('editor').appendChild(editor)
 

@@ -42,7 +42,7 @@
             },
 
             "datastreams.start":  {
-                "ui.data": {}
+                "ui.display": {}
             }
         }
     }
