@@ -1,7 +1,7 @@
 import dataDevices from "../index.js"
 
 
-const operator = async (node, input, ...recursiveData) => {
+const operator = async function (input, ...recursiveData) {
 
     if (input === 'data') return recursiveData
     else {
@@ -11,7 +11,8 @@ const operator = async (node, input, ...recursiveData) => {
             // Begin Tracking the Device Data
             const ontrack = (track) => {
                 track.subscribe((data, timestamp) => {
-                    node.run('data', track.contentHint, data, timestamp)
+                    console.log('running', data, timestamp)
+                    this.run('data', track.contentHint, data, timestamp)
                 })
             }
             

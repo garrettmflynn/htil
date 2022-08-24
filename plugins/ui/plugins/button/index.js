@@ -1,12 +1,9 @@
-// Click to activate next node
-const operator = (pressed) => pressed
-
 // Element Specification
 export const tagName = 'button'
-export const innerHTML = 'Click Me'
 export const attributes = {
-    onmousedown: (ev) => {
-        const pressed = ev.target.node.nodes.get('pressed')
+    innerHTML: 'Click Me',
+    onmousedown: function () {
+        const pressed = this // this.nodes.get('pressed') ?? // TODO: populate argument nodes...
         pressed.run(true)
         const onMouseUp = () => {
             pressed.run(false)
@@ -16,4 +13,4 @@ export const attributes = {
     }
 }
 
-export default operator
+export default (pressed) => pressed

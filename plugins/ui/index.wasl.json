@@ -2,15 +2,21 @@
     "graph": {
         "nodes": {
             "button_1" : {
-                "innerHTML": "Start synthetic data generation",
+                "attributes" : {
+                    "innerHTML": "Start synthetic data generation"
+                },
                 "src": "plugins/button/index.js"
             },
             "button_2" : {
-                "innerHTML": "Connect Ganglion",
+                "attributes" : {
+                    "innerHTML": "Connect Ganglion"
+                },
                 "src": "plugins/button/index.js"
             },
             "button_3" : {
-                "innerHTML": "Connect Muse",
+                "attributes" : {
+                    "innerHTML": "Connect Muse"
+                },
                 "src": "plugins/button/index.js"
             },
             "display" : {
