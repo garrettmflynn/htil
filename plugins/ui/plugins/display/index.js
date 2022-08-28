@@ -7,7 +7,7 @@ export const style = {
     padding: '25px'
 }
 
-export function onrender() {
+export function oncreate() {
     this.paragraphs = {}
 }
 
