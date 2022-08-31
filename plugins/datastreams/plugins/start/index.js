@@ -9,20 +9,12 @@ const operator = async function (input, ...recursiveData) {
         return await dataDevices.getUserDevice(input).then(device => {
 
             // Begin Tracking the Device Data
-            const ontrack = (track) => {
-                track.subscribe((data, timestamp) => {
-                    console.log('running', data, timestamp)
-                    this.run('data', track.contentHint, data, timestamp)
-                })
-            }
-            
+            const ontrack = (track) => track.subscribe((data, timestamp) => this.run('data', track.contentHint, data, timestamp))
             device.stream.getTracks().forEach(ontrack)
             device.stream.onaddtrack = ontrack
             // return device
         })
     }
 }
-
-export const tagName = 'div'
 
 export default operator

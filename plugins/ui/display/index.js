@@ -1,5 +1,4 @@
 
-// State (TODO: Do these overlap?)
 export const tagName = 'div'
 export const style = {
     width: '300px',
@@ -7,9 +6,7 @@ export const style = {
     padding: '25px'
 }
 
-export function oncreate() {
-    this.paragraphs = {}
-}
+export const paragraphs = {}
 
 export default function(id, data) {
 

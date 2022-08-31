@@ -14,7 +14,31 @@
                 "src": "../../plugins/datastreams/index.wasl.json"
             },
             "ui": {
-                "src": "../../plugins/ui/index.wasl.json"
+                    "graph": {
+                    "nodes": {
+                        "button_1" : {
+                            "attributes" : {
+                                "innerHTML": "Start synthetic data generation"
+                            },
+                            "src": "../../plugins/ui/button/index.js"
+                        },
+                        "button_2" : {
+                            "attributes" : {
+                                "innerHTML": "Connect Ganglion"
+                            },
+                            "src": "../../plugins/ui/button/index.js"
+                        },
+                        "button_3" : {
+                            "attributes" : {
+                                "innerHTML": "Connect Muse"
+                            },
+                            "src": "../../plugins/ui/button/index.js"
+                        },
+                        "display" : {
+                            "src": "../../plugins/ui/display/index.js"
+                        }
+                    }
+            }
             }
         },
 
