@@ -9,7 +9,7 @@ const operator = async function (input, ...recursiveData) {
         return await dataDevices.getUserDevice(input).then(device => {
 
             // Begin Tracking the Device Data
-            const ontrack = (track) => track.subscribe((data, timestamp) => this.run('data', track.contentHint, data, timestamp))
+            const ontrack = (track) => track.subscribe((data, timestamp) => this.run('data', data, timestamp, track.contentHint))
             device.stream.getTracks().forEach(ontrack)
             device.stream.onaddtrack = ontrack
             // return device

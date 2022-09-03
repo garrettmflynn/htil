@@ -8,7 +8,7 @@ export const style = {
 
 export const paragraphs = {}
 
-export default function(id, data) {
+export default function(data, time, id) {
 
     if (!this.paragraphs[id]) {
         this.paragraphs[id] = document.createElement('p')

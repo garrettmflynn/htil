@@ -14,7 +14,7 @@
                 "src": "../../plugins/datastreams/index.wasl.json"
             },
             "ui": {
-                    "graph": {
+                "graph": {
                     "nodes": {
                         "button_1" : {
                             "attributes" : {
