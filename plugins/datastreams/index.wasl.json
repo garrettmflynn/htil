@@ -1,14 +1,12 @@
 {
-    "graph": {
-        "nodes": {
-            "start" : {
-                "src": "plugins/start/index.js"
-            }
-        },
-
-        "ports": { 
-            "input": "start",
-            "output": "start"
+    "components": {
+        "start" : {
+            "src": "plugins/start/index.js"
         }
+    },
+
+    "ports": { 
+        "input": "start",
+        "output": "start"
     }
 }

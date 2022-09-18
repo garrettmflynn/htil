@@ -1,73 +1,64 @@
 {
-    "graph": {
-        "nodes": {
-            "synthetic": {
-                "src": "../../plugins/devices/synthetic/index.js"
-            },
-            "ganglion": {
-                "src": "../../plugins/devices/ganglion/index.js"
-            },
-            "muse": {
-                "src": "../../plugins/devices/muse/index.js"
-            },
-            "datastreams": {
-                "src": "../../plugins/datastreams/index.wasl.json"
-            },
-            "ui": {
-                "graph": {
-                    "nodes": {
-                        "button_1" : {
-                            "attributes" : {
-                                "innerHTML": "Start synthetic data generation"
-                            },
-                            "src": "../../plugins/ui/button/index.js"
-                        },
-                        "button_2" : {
-                            "attributes" : {
-                                "innerHTML": "Connect Ganglion"
-                            },
-                            "src": "../../plugins/ui/button/index.js"
-                        },
-                        "button_3" : {
-                            "attributes" : {
-                                "innerHTML": "Connect Muse"
-                            },
-                            "src": "../../plugins/ui/button/index.js"
-                        },
-                        "display" : {
-                            "src": "../../plugins/ui/display/index.js"
-                        }
-                    }
-            }
-            }
+    "components": {
+        "synthetic": {
+            "src": "../../plugins/devices/synthetic/index.js"
         },
-
-        "edges": {
-
-            "ui.button_1": {
-                "synthetic": {}
-            },
-            "synthetic":  {
-                "datastreams.start": {}
-            },
-
-            "ui.button_2": {
-                "ganglion": {}
-            },
-            "ganglion":  {
-                "datastreams.start": {}
-            },
-
-            "ui.button_3": {
-                "muse": {}
-            },
-            "muse":  {
-                "datastreams.start": {}
-            },
-
-            "datastreams.start":  {
-                "ui.display": {}
+        "ganglion": {
+            "src": "../../plugins/devices/ganglion/index.js"
+        },
+        "muse": {
+            "src": "../../plugins/devices/muse/index.js"
+        },
+        "datastreams": {
+            "src": "../../plugins/datastreams/index.wasl.json"
+        },
+        "ui": {
+            "components": {
+                "button_1": {
+                    "attributes": {
+                        "innerHTML": "Start synthetic data generation"
+                    },
+                    "src": "../../plugins/ui/button/index.js"
+                },
+                "button_2": {
+                    "attributes": {
+                        "innerHTML": "Connect Ganglion"
+                    },
+                    "src": "../../plugins/ui/button/index.js"
+                },
+                "button_3": {
+                    "attributes": {
+                        "innerHTML": "Connect Muse"
+                    },
+                    "src": "../../plugins/ui/button/index.js"
+                },
+                "display": {
+                    "src": "../../plugins/ui/display/index.js"
+                }
             }
+        }
+    },
+    "connections": {
+        "ui.button_1": {
+            "synthetic": {}
+        },
+        "synthetic": {
+            "datastreams.start": {}
+        },
+        "ui.button_2": {
+            "ganglion": {}
+        },
+        "ganglion": {
+            "datastreams.start": {}
+        },
+        "ui.button_3": {
+            "muse": {}
+        },
+        "muse": {
+            "datastreams.start": {}
+        },
+        "datastreams.start": {
+            "ui.display": {}
         }
     }
 }

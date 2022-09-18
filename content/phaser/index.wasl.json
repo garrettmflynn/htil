@@ -1,15 +1,7 @@
 {
-    "graph": {
-
-        "nodes": {
-            "phaser": {
-                "src": "https://raw.githubusercontent.com/garrettmflynn/phaser/nightly/index.wasl.json"
-            }
-        },
-
-        "edges": {
-
-
+    "components": {
+        "phaser": {
+            "src": "https://raw.githubusercontent.com/garrettmflynn/phaser/nightly/index.wasl.json"
         }
     }
 }
