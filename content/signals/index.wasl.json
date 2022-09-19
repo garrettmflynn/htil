@@ -1,16 +1,28 @@
 {
     "components": {
         "synthetic": {
-            "src": "../../plugins/devices/synthetic/index.js"
+            "src": "../../plugins/devices/synthetic/index.js",
+            "children": {
+                "datastreams": true
+            }
         },
         "ganglion": {
-            "src": "../../plugins/devices/ganglion/index.js"
+            "src": "../../plugins/devices/ganglion/index.js",
+            "children": {
+                "datastreams":true
+            }
         },
         "muse": {
-            "src": "../../plugins/devices/muse/index.js"
+            "src": "../../plugins/devices/muse/index.js",
+            "children": {
+                "datastreams": true
+            }
         },
         "datastreams": {
-            "src": "../../plugins/datastreams/index.wasl.json"
+            "src": "../../plugins/datastreams/index.wasl.json",
+            "children": {
+                "ui.display":true
+            }
         },
         "ui": {
             "components": {
@@ -18,47 +30,33 @@
                     "attributes": {
                         "innerHTML": "Start synthetic data generation"
                     },
-                    "src": "../../plugins/ui/button/index.js"
+                    "src": "../../plugins/ui/button/index.js",
+                    "children": {
+                        "synthetic": true
+                    }
                 },
                 "button_2": {
                     "attributes": {
                         "innerHTML": "Connect Ganglion"
                     },
-                    "src": "../../plugins/ui/button/index.js"
+                    "src": "../../plugins/ui/button/index.js",
+                    "children": {
+                        "ganglion": true
+                    }
                 },
                 "button_3": {
                     "attributes": {
                         "innerHTML": "Connect Muse"
                     },
-                    "src": "../../plugins/ui/button/index.js"
+                    "src": "../../plugins/ui/button/index.js",
+                    "children": {
+                        "muse": true
+                    }
                 },
                 "display": {
                     "src": "../../plugins/ui/display/index.js"
                 }
             }
-        }
-    },
-    "connections": {
-        "ui.button_1": {
-            "synthetic": {}
-        },
-        "synthetic": {
-            "datastreams.start": {}
-        },
-        "ui.button_2": {
-            "ganglion": {}
-        },
-        "ganglion": {
-            "datastreams.start": {}
-        },
-        "ui.button_3": {
-            "muse": {}
-        },
-        "muse": {
-            "datastreams.start": {}
-        },
-        "datastreams.start": {
-            "ui.display": {}
         }
     }
 }
